@@ -1,8 +1,16 @@
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import {useChatStore} from "../store/ChatStore.js";
 const message = ref("");
+const loading = ref(false);
 const chatStore = useChatStore;
+
+
+watch(() => loading, () => {
+  if(loading.value === false) {
+    message.value = "";
+  }
+});
 
 function updateMessage(event) {
   message.value = event.target.innerText;
@@ -10,16 +18,17 @@ function updateMessage(event) {
 
 async function send() {
   try {
+    loading.value = true;
     if(message.value === "") {
       return;
     }
     await chatStore().sendMessage(message.value);
-    message.value = "";
+    loading.value = false;
   } catch (error) {
     console.error(error);
   }
-
 }
+
 
 </script>
 
