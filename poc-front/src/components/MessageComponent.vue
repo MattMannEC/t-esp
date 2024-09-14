@@ -11,7 +11,7 @@ const props = defineProps({
 </script>
 
 <template>
-<div v-for="(message, index) in messages" class="flex w-full" :class="[message.sender === 'user'? 'justify-end': 'justify-start']">
+<div v-for="(message, index) in messages" class="my-4 flex w-full" :class="[message.sender === 'user'? 'justify-end': 'justify-start']">
   <div class="rounded p-2" :class="[message.sender === 'user' ? 'bg-gray-200': 'bg-gray-100']">
     {{message.content}}
   </div>

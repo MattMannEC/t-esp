@@ -1,10 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from controllers.controller_ai import router
-# Créer une instance de FastAPI
 app = FastAPI()
 
-# Définir les origines autorisées (par exemple, votre frontend)
 origins = [
     "http://localhost:5173",
 ]

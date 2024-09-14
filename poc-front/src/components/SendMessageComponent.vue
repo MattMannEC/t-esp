@@ -3,7 +3,7 @@ import { ref, watch } from "vue";
 import {useChatStore} from "../store/ChatStore.js";
 const message = ref("");
 const loading = ref(false);
-const chatStore = useChatStore;
+const chatStore = useChatStore();
 
 
 watch(() => loading, () => {
@@ -22,7 +22,7 @@ async function send() {
     if(message.value === "") {
       return;
     }
-    await chatStore().sendMessage(message.value);
+    await chatStore.sendMessage(message.value);
     loading.value = false;
   } catch (error) {
     console.error(error);
