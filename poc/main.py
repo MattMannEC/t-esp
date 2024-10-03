@@ -3,6 +3,7 @@ import json
 import time
 import logging
 from flask import Flask, render_template
+from http import HTTPStatus
 from flask_sse import sse
 from langchain_core.output_parsers import SimpleJsonOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 # Run app
 app = Flask(__name__)
 app.config["REDIS_URL"] = "redis://localhost"
+logger.info("Register blueprint")
 app.register_blueprint(sse, url_prefix='/stream')
 
 def format_docs(docs):
@@ -39,6 +41,7 @@ Répondez à la question suivante:
 {question}"""
 
 # Create RAG chain
+logger.info("Create RAG chain")
 rag_prompt = ChatPromptTemplate.from_template(RAG_TEMPLATE)
 llm = ChatOllama(model="mistral:latest", verbose=True)
 chain = (
@@ -50,14 +53,24 @@ logger.info("Chain loaded")
 
 def run_rag(question):
     docs = chroma_store.similarity_search(question)
+    logger.info(docs)
     logger.info("Running chain")
-    return chain.stream({"context": docs, "question": question})    
+    return chain.stream({"context": docs, "question": question})
 
+# Simulates a request being sent from the web interface to the crow web app
+# and connecting the web interface to the Event Source.
+@app.route('/')
+def index():
+    return render_template("index.html")
+
+# Simulates receiving an http query from the crow api which invokes the LLM and
+# send messages to the Event stream.
 @app.route('/simulate_llm')
 def simulate_llm():
-    question = "Je suis serveur dans un bar, est-ce que mon patron peut me forcer à faire des heures supp ?"
-    def generate():
-        for s in run_rag(question):
-            yield s.content
-    return Response(generate(), mimetype='text/event-stream')
+    question = "Est-ce que je peux dormir pendant ma pause au travail ?"
+    for s in run_rag(question):
+        sse.publish({"message": s.content})
+    return Response("", HTTPStatus.OK)
+
+
 

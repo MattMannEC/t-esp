@@ -3,7 +3,12 @@ services:
     image: chromadb/chroma
     ports:
       - "8000:8000"
+    volumes:
+      - chroma-data:/chroma/chroma
   redis:
     image: redis:latest
     ports:
       - "6379:6379"
+
+volumes:
+  chroma-data:
