@@ -67,7 +67,7 @@ def index():
 # send messages to the Event stream.
 @app.route('/simulate_llm')
 def simulate_llm():
-    question = "Est-ce que je peux dormir pendant ma pause au travail ?"
+    question = "Quelle est la langue de la république ?"
     for s in run_rag(question):
         sse.publish({"message": s.content})
     return Response("", HTTPStatus.OK)
