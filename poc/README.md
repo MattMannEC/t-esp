@@ -27,6 +27,7 @@ Run poc/rag.ipynb making sure to have a pdf document to store and configuring th
 
 ## Run gunicorn server
 `cd DIR_CONTAINING_MAIN.PY`
+
 `gunicorn main:app --worker-class gevent --bind 127.0.0.1:8001`
 
 ## Run the RAG system
