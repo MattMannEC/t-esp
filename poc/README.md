@@ -19,7 +19,28 @@ https://github.com/ollama/ollama/blob/main/README.md#quickstart
 
 `pip install -r requirements.txt`
 
+## Config
+Rename poc/.env poc/.env.example
+
 ## Compose database container
 `docker compose up`
+
+## Load documents into vector store
+Run poc/rag.ipynb making sure to have a pdf document to store and configuring the path at `file_path`
+
+## Run gunicorn server
+`cd DIR_CONTAINING_MAIN.PY`
+
+`gunicorn main:app --worker-class gevent --bind 127.0.0.1:8001`
+
+## Run the RAG system
+Connect to the event source in a navigator
+`http://127.0.0.1:8001/`
+
+Call the endpoint that starts the RAG system to send events
+`http://127.0.0.1:8001/simulate_llm`
+
+
+
 
 

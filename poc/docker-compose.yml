@@ -1,5 +1,18 @@
 services:
   chromadb:
     image: chromadb/chroma
+    volumes:
+      - chromadb:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - PERSIST_DIRECTORY=/chroma/chroma
+      - ANONYMIZED_TELEMETRY=${ANONYMIZED_TELEMETRY:-FALSE}    
     ports:
-      - "8000:8000"
+      - 8000:8000
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+volumes:
+  chromadb:
