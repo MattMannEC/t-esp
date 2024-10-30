@@ -58,8 +58,8 @@ def run_rag(question):
     logger.info("Running chain")
     return chain.stream({"context": docs, "question": question})
 
-# # Simulates a request being sent from the web interface to the crow web app
-# # and connecting the web interface to the Event Source.
+# Simulates a request being sent from the web interface to the crow web app
+# and connecting the web interface to the Event Source.
 @app.route('/')
 def index():
     return render_template("index.html")

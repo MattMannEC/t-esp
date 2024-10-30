@@ -19,6 +19,9 @@ https://github.com/ollama/ollama/blob/main/README.md#quickstart
 
 `pip install -r requirements.txt`
 
+## Config
+Rename poc/.env poc/.env.example
+
 ## Compose database container
 `docker compose up`
 
