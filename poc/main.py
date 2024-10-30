@@ -12,13 +12,14 @@ from langchain.callbacks.manager import CallbackManager
 from langchain_core.callbacks import StreamingStdOutCallbackHandler
 from langchain_ollama import ChatOllama
 from langchain_core.runnables import RunnablePassthrough
-
+from flask_cors import CORS
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Run app
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all origins
 app.config["REDIS_URL"] = "redis://localhost"
 logger.info("Register blueprint")
 app.register_blueprint(sse, url_prefix='/stream')
@@ -52,13 +53,13 @@ chain = (
 logger.info("Chain loaded")
 
 def run_rag(question):
-    docs = chroma_store.similarity_search(question)
+    docs = chroma_store.similarity_search(question, k=10)
     logger.info(docs)
     logger.info("Running chain")
     return chain.stream({"context": docs, "question": question})
 
-# Simulates a request being sent from the web interface to the crow web app
-# and connecting the web interface to the Event Source.
+# # Simulates a request being sent from the web interface to the crow web app
+# # and connecting the web interface to the Event Source.
 @app.route('/')
 def index():
     return render_template("index.html")
@@ -67,8 +68,12 @@ def index():
 # send messages to the Event stream.
 @app.route('/simulate_llm')
 def simulate_llm():
-    question = "Quelle est la langue de la république ?"
-    for s in run_rag(question):
+    prompt = request.args.get('prompt')
+    if not prompt:
+        return Response("Missing 'prompt' parameter", HTTPStatus.BAD_REQUEST)
+    
+    logger.info(f"Received prompt: {prompt}")
+    for s in run_rag(prompt):
         sse.publish({"message": s.content})
     return Response("", HTTPStatus.OK)
 

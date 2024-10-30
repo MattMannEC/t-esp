@@ -6,6 +6,6 @@ embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-b
 chroma_client = chromadb.HttpClient(host='localhost', port=8000)
 
 chroma_store = Chroma(
-    collection_name="example_collection",
+    collection_name="themis",
     client=chroma_client,
     embedding_function=embeddings)
