@@ -8,7 +8,11 @@
           :key="index"
           :class="['message', msg.sender === 'user' ? 'sent' : 'received']"
         >
-          {{ msg.text }}
+          <template v-if="msg.sender === 'bot'" class="received-container">
+            <img src="./assets/image.png" alt="Bot Icon" class="icon" />
+            <div v-html="formatMessage(msg.text)"></div>
+          </template>
+          <div v-else v-html="formatMessage(msg.text)"></div>
         </div>
       </div>
       <div class="input-container">
@@ -29,7 +33,11 @@ export default {
   data() {
     return {
       prompt: '',
-      messages: [],
+      messages: [
+        // { sender: 'bot', text: 'Hello! How can I assist you today?' },
+        // { sender: 'user', text: 'Can you tell me a joke?' },
+        // { sender: 'bot', text: 'Why don’t scientists trust atoms? Because they make up everything!' },
+      ],
       eventSource: null,
     };
   },
@@ -65,6 +73,9 @@ export default {
         this.eventSource.close();
         this.eventSource = null;
       }
+    },
+    formatMessage(message) {
+      return message.replace(/(?:\r\n|\r|\n)/g, '<br>');
     },
   },
 };
@@ -104,6 +115,8 @@ h1 {
   flex: 1;
   overflow-y: auto;
   margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .message {
@@ -114,17 +127,21 @@ h1 {
 }
 
 .sent {
-  background: #e0f7fa;
+  background: #74747430;
   text-align: right;
   align-self: flex-end;
 }
 
 .received {
-  background: #fff9c4;
+  display: flex;
+  width: 100%;
+}
+.received-container {
+  display: flex;
+  align-items: center;
   text-align: left;
   align-self: flex-start;
 }
-
 .input-container {
   display: flex;
   gap: 10px;
@@ -153,5 +170,10 @@ button:hover {
 button:disabled {
   background: #ccc;
   cursor: not-allowed;
+}
+
+.icon {
+  width: 30px;
+  margin-right: 10px;
 }
 </style>
