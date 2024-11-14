@@ -10,7 +10,7 @@
         >
           <template v-if="msg.sender === 'bot'" class="received-container">
             <img src="./assets/image.png" alt="Bot Icon" class="icon" />
-            <div v-html="formatMessage(msg.text)"></div>
+            <div v-html="formatMessage(msg.text)" class="received-text"></div>
           </template>
           <div v-else v-html="formatMessage(msg.text)"></div>
         </div>
@@ -36,7 +36,7 @@ export default {
       messages: [
         // { sender: 'bot', text: 'Hello! How can I assist you today?' },
         // { sender: 'user', text: 'Can you tell me a joke?' },
-        // { sender: 'bot', text: 'Why don’t scientists trust atoms? Because they make up everything!' },
+        // { sender: 'bot', text: 'Here is a really funny joke that i think that you will like. Tell me if you like it or not... Why don’t scientists trust atoms?\nBecause they make up everything!' },
       ],
       eventSource: null,
     };
@@ -136,10 +136,12 @@ h1 {
   display: flex;
   width: 100%;
 }
+.received-text {
+  text-align: left
+}
 .received-container {
   display: flex;
   align-items: center;
-  text-align: left;
   align-self: flex-start;
 }
 .input-container {
@@ -174,6 +176,7 @@ button:disabled {
 
 .icon {
   width: 30px;
+  height: 30px;
   margin-right: 10px;
 }
 </style>
