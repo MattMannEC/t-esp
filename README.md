@@ -34,11 +34,15 @@ Run poc/rag.ipynb making sure to have a pdf document to store and configuring th
 `gunicorn main:app --worker-class gevent --bind 127.0.0.1:8001`
 
 ## Run the RAG system
-Connect to the event source in a navigator
-`http://127.0.0.1:8001/`
+POST `http://127.0.0.1:8001/simulate_llm` 
+params = prompt: str
 
-Call the endpoint that starts the RAG system to send events
-`http://127.0.0.1:8001/simulate_llm`
+## Run a demo chat interface
+```
+cd chatbot
+npm install && npm run dev
+```
+
 
 
 
