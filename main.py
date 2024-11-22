@@ -12,6 +12,8 @@ from langchain.callbacks.manager import CallbackManager
 from langchain_core.callbacks import StreamingStdOutCallbackHandler
 from langchain_ollama import ChatOllama
 from langchain_core.runnables import RunnablePassthrough
+from prefect import flow
+from rag_workflow import rag_automated_workflow
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
