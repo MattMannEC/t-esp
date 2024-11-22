@@ -15,18 +15,17 @@ https://github.com/ollama/ollama/blob/main/README.md#quickstart
 `ollama serve`
 
 ## Install python packages
-`cd POC_DIR`
 
 `pip install -r requirements.txt`
 
 ## Config
-Rename poc/.env poc/.env.example
+Rename .env.example .env
 
 ## Compose database container
 `docker compose up`
 
 ## Load documents into vector store
-Run poc/rag.ipynb making sure to have a pdf document to store and configuring the path at `file_path`
+Run rag.ipynb making sure to have a pdf document to store and configuring the path at `file_path`
 
 ## Run gunicorn server
 `cd DIR_CONTAINING_MAIN.PY`
