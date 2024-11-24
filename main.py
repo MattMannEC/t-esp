@@ -150,3 +150,40 @@ async def simulate_llm():
 
 
 # TODO the summarized input needs to be coherent with the rag system prompt.
+
+@app.route("/summarize", methods=["POST"])
+def summarize():
+    try:
+        data = request.json
+        if not data or "text" not in data:
+            return Response("Missing 'text' parameter in JSON body", HTTPStatus.BAD_REQUEST)
+
+        text = data["text"]
+        if not text.strip():
+            return Response("Text cannot be empty", HTTPStatus.BAD_REQUEST)
+
+        summary = summarize_text(text)
+
+        return {"summary": summary}
+    except Exception as e:
+        logger.error(f"Erreur dans /summarize : {str(e)}")
+        return Response("Une erreur est survenue lors du traitement de votre requête.", HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+def summarize_text(text: str) -> str:
+    try:
+        summary_prompt = PromptTemplate(
+            input_variables=["text"],
+            template="Résumez le texte suivant de manière concise et claire :\n\n{text}\n\nRésumé :"
+        )
+        prompt = summary_prompt.format(text=text)
+
+        response = llm.invoke(prompt)
+
+        if not isinstance(response, str) or not response.strip():
+            raise ValueError("Résumé vide ou réponse invalide du LLM.")
+
+        return response
+    except Exception as e:
+        logger.error(f"Erreur lors du résumé : {str(e)}")
+        return "Une erreur est survenue lors du résumé."
