@@ -26,6 +26,7 @@ from langchain_core.runnables import Runnable, RunnableConfig
 from flask_cors import CORS
 from seq2seq import summarize_chat_history
 from langchain_core.globals import set_debug
+from threading import Lock
 
 set_debug(True)
 
@@ -153,37 +154,67 @@ async def simulate_llm():
 
 @app.route("/summarize", methods=["POST"])
 def summarize():
+    llm_lock = Lock()
     try:
+        if not llm_lock.acquire(blocking=False):
+            return Response("Le LLM est actuellement occupé. Veuillez réessayer plus tard.", HTTPStatus.TOO_MANY_REQUESTS)
+
         data = request.json
         if not data or "text" not in data:
             return Response("Missing 'text' parameter in JSON body", HTTPStatus.BAD_REQUEST)
 
         text = data["text"]
+        text = truncate_text(text)
         if not text.strip():
             return Response("Text cannot be empty", HTTPStatus.BAD_REQUEST)
 
-        summary = summarize_text(text)
+        summary = summarize_recursively(text)
 
         return {"summary": summary}
     except Exception as e:
         logger.error(f"Erreur dans /summarize : {str(e)}")
         return Response("Une erreur est survenue lors du traitement de votre requête.", HTTPStatus.INTERNAL_SERVER_ERROR)
+    finally:
+        llm_lock.release()
 
 
-def summarize_text(text: str) -> str:
+def summarize_recursively(text: str, max_length: int = 50) -> str:
+    truncated_text = truncate_text(text)
+
     try:
         summary_prompt = PromptTemplate(
             input_variables=["text"],
-            template="Résumez le texte suivant de manière concise et claire :\n\n{text}\n\nRésumé :"
+            template=(
+                "Vous êtes un assistant expert en rédaction. Votre tâche est de résumer "
+                "le texte ci-dessous en français, de manière parfaitement claire, concise et fidèle au contenu. "
+                "Le résumé ne doit pas dépasser {max_length} caractères. "
+                "Assurez-vous d'écrire en français correct, sans fautes d'orthographe ni de grammaire, "
+                "et de ne pas déformer le sens original.\n\n"
+                "Texte à résumer :\n{text}\n\n"
+                "Résumé (en {max_length} caractères maximum) :"
+            )
         )
-        prompt = summary_prompt.format(text=text)
-
+        prompt = summary_prompt.format(text=truncated_text)
         response = llm.invoke(prompt)
 
-        if not isinstance(response, str) or not response.strip():
-            raise ValueError("Résumé vide ou réponse invalide du LLM.")
+        logger.debug(f"Réponse brute du LLM : {response}")
 
-        return response
+        if hasattr(response, "content"):
+            summary = response.content.strip()
+            logger.info(f"Résumé extrait : {summary}")
+            return summary
+
+        else:
+            logger.error("Réponse inattendue du LLM, pas de 'content'")
+            return text
+
     except Exception as e:
         logger.error(f"Erreur lors du résumé : {str(e)}")
         return "Une erreur est survenue lors du résumé."
+
+
+def truncate_text(text: str) -> str:
+    tokens = text.split()
+    if len(tokens) > 1024:
+        return " ".join(tokens[:1024])
+    return text

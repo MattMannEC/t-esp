@@ -23,13 +23,20 @@
         />
         <button @click="sendMessage">Send</button>
         <button @click="disconnect" v-if="eventSource">Disconnect</button>
+        <IconPlus @click="resumeText"/>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+
+import IconPlus from "@/components/icons/IconPlus.vue";
+
 export default {
+  components: {
+    IconPlus
+  },
   data() {
     return {
       prompt: '',
@@ -39,6 +46,7 @@ export default {
         // { sender: 'bot', text: 'Here is a really funny joke that i think that you will like. Tell me if you like it or not... Why don’t scientists trust atoms?\nBecause they make up everything!' },
       ],
       eventSource: null,
+      loading: false
     };
   },
   mounted() {
@@ -77,7 +85,73 @@ export default {
     formatMessage(message) {
       return message.replace(/(?:\r\n|\r|\n)/g, '<br>');
     },
-  },
+    resumeText() {
+      const text = 'PRÉAMBULE\n' +
+          'Le peuple français proclame solennellement son attachement aux Droits de l\'homme et aux principes de la souveraineté nationale tels qu\'ils ont été définis par la Déclaration de 1789, confirmée et complétée par le préambule de la Constitution de 1946, ainsi qu\'aux droits et devoirs définis dans la Charte de l\'environnement de 2004.\n' +
+          '\n' +
+          'En vertu de ces principes et de celui de la libre détermination des peuples, la République offre aux territoires d\'outre-mer qui manifestent la volonté d\'y adhérer des institutions nouvelles fondées sur l\'idéal commun de liberté, d\'égalité et de fraternité et conçues en vue de leur évolution démocratique.\n' +
+          '\n' +
+          'ARTICLE PREMIER.\n' +
+          'La France est une République indivisible, laïque, démocratique et sociale. Elle assure l\'égalité devant la loi de tous les citoyens sans distinction d\'origine, de race ou de religion. Elle respecte toutes les croyances. Son organisation est décentralisée.\n' +
+          '\n' +
+          'La loi favorise l\'égal accès des femmes et des hommes aux mandats électoraux et fonctions électives, ainsi qu\'aux responsabilités professionnelles et sociales.\n' +
+          '\n' +
+          'Titre premier - DE LA SOUVERAINETÉ\n' +
+          'ARTICLE 2.\n' +
+          'La langue de la République est le français.\n' +
+          '\n' +
+          'L\'emblème national est le drapeau tricolore, bleu, blanc, rouge.\n' +
+          '\n' +
+          'L\'hymne national est « La Marseillaise ».\n' +
+          '\n' +
+          'La devise de la République est « Liberté, Égalité, Fraternité ».\n' +
+          '\n' +
+          'Son principe est : gouvernement du peuple, par le peuple et pour le peuple.\n' +
+          '\n' +
+          'ARTICLE 3.\n' +
+          'La souveraineté nationale appartient au peuple qui l\'exerce par ses représentants et par la voie du référendum.\n' +
+          '\n' +
+          'Aucune section du peuple ni aucun individu ne peut s\'en attribuer l\'exercice.\n' +
+          '\n' +
+          'Le suffrage peut être direct ou indirect dans les conditions prévues par la Constitution. Il est toujours universel, égal et secret.\n' +
+          '\n' +
+          'Sont électeurs, dans les conditions déterminées par la loi, tous les nationaux français majeurs des deux sexes, jouissant de leurs droits civils et politiques.\n' +
+          '\n' +
+          'ARTICLE 4.\n' +
+          'Les partis et groupements politiques concourent à l\'expression du suffrage. Ils se forment et exercent leur activité librement. Ils doivent respecter les principes de la souveraineté nationale et de la démocratie.\n' +
+          '\n' +
+          'Ils contribuent à la mise en œuvre du principe énoncé au second alinéa de l\'article 1er dans les conditions déterminées par la loi.\n' +
+          '\n' +
+          'La loi garantit les expressions pluralistes des opinions et la participation équitable des partis et groupements politiques à la vie démocratique de la Nation.\n' +
+          '\n' +
+          'Titre II - LE PRÉSIDENT DE LA RÉPUBLIQUE\n' +
+          'ARTICLE 5.\n' +
+          'Le Président de la République veille au respect de la Constitution. Il assure, par son arbitrage, le fonctionnement régulier des pouvoirs publics ainsi que la continuité de l\'État.\n' +
+          '\n' +
+          'Il est le garant de l\'indépendance nationale, de l\'intégrité du territoire et du respect des traités.\n' +
+          '\n' +
+          'ARTICLE 6.\n' +
+          'Le Président de la République est élu pour cinq ans au suffrage universel direct.\n' +
+          '\n' +
+          'Nul ne peut exercer plus de deux mandats consécutifs.\n' +
+          '\n' +
+          'Les modalités d\'application du présent article sont fixées par une loi organique.'
+      fetch('http://127.0.0.1:8001/summarize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text }),
+      })
+          .then(response => response.json())
+          .then(data => {
+            this.loading = false;
+            this.messages.push({
+              sender: 'bot',
+              text: data.summary
+            });
+          })
+          .catch((error) => console.error('Erreur:', error));
+    }
+  }
 };
 </script>
 
