@@ -1,49 +1,38 @@
-from typing import Annotated, TypedDict, Sequence
-from flask import Flask, Response, request
-import logging
+from flask import Flask, Response, jsonify, request
+from tools.logger import logger
 from flask import Flask
 from http import HTTPStatus
-from flask_sse import sse
-from langchain.chains.history_aware_retriever import create_history_aware_retriever
+
+from langchain_chroma import Chroma
 from langchain.chains.retrieval import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import START, StateGraph
-from langgraph.graph.message import add_messages
-from langchain.prompts import PromptTemplate
-
+from flask_sse import sse
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_core.messages import (
-    AIMessage,
-    AIMessageChunk,
-    HumanMessage,
-    AIMessageChunk,
-    BaseMessage,
-)
-from chroma_store import chroma_store
+from chroma_store import get_chroma_with_collection
 from langchain_ollama import ChatOllama
-from langchain_core.runnables import Runnable, RunnableConfig
+from langchain_core.runnables import Runnable
 from flask_cors import CORS
-from seq2seq import summarize_chat_history
+from langchain_core.messages import AIMessage, HumanMessage, AIMessageChunk
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import StateGraph
 from langchain_core.globals import set_debug
-
-set_debug(True)
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from langchain_core.runnables import RunnableConfig
+from config import app_config
+set_debug(False)
 
 # Run app
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all origins
-app.config["REDIS_URL"] = "redis://localhost"
+app.config["REDIS_URL"] = "redis://redis"
 logger.info("Register blueprint")
 app.register_blueprint(sse, url_prefix="/stream")
 
 config: RunnableConfig = {"run_name": "interface_destined"}
-llm = ChatOllama(model="mistral:latest", verbose=True).with_config(config)
+llm = ChatOllama(
+    model="mistral:latest", verbose=True, base_url=app_config.LLM_HOST_URL
+).with_config(config=config)
 
-
+# TODO add summary and input to prompt
 rag_system_prompt = """
 Vous êtes un assistant qui rend le droit français plus accessible au grand public.
 Utilisez les informations suivantes pour répondre à la question posée.
@@ -91,62 +80,83 @@ summary_prompt_template = PromptTemplate(
         "Résumé :"
     ),
 )
+qa_chain: Runnable = create_stuff_documents_chain(llm, qa_prompt)
+# rag_chain: Runnable = create_retrieval_chain(history_aware_rag_retriever, qa_chain)
+rag_chain: Runnable = create_retrieval_chain(rag_collection.as_retriever(), qa_chain)
 
-rag_chain: Runnable = create_stuff_documents_chain(llm, rag_prompt)
-# retrieval_chain = create_retrieval_chain(history_aware_retriever, rag_chain)
-
-
-class State(TypedDict):
-    input: str
-    chat_history: Annotated[Sequence[BaseMessage], add_messages]
-    context: str
-    answer: str
+from langgraph.graph import StateGraph
+from data_types import State
+from tools.summarize import invoke_summary_model
 
 
-def call_model(state: State) -> State:
-    original_input = state["input"]
-    if len(state["chat_history"]) > 1:
-        state["input"] = summarize_chat_history(
-            state["chat_history"], summary_prompt_template
-        )
-        logger.info(f"Summarized input: {state['input']}")
-    state["context"] = chroma_store.similarity_search(state["input"])
-    response = rag_chain.invoke(state)
+def summarize(state: State):
+    logger.info("summarize")
+    """Retrieve information related to a query."""
+    state["messages"].append(HumanMessage(state["input"]))
+    if len(state["messages"]) < 3:
+        return state
+    response = invoke_summary_model(state)
+    logger.info(f"summarized input : {response.content}")
+    return {"summary": response.content}
+
+
+def retrieve(state: State):
+    logger.info("retrieve")
+    """Retrieve information related to a query."""
+    q = state.get("summary", state["input"])
+    logger.info(f"Simimarity search on : {q}")
+    retrieved_docs = conditions_collection.similarity_search(
+        q, k=2
+    )
     return {
-        "chat_history": [
-            HumanMessage(original_input),
-            AIMessage(response),
-        ],
-        "answer": response,
+        "context": retrieved_docs,
     }
 
 
-workflow = StateGraph(state_schema=State)
-workflow.add_edge(START, "model")
-workflow.add_node("model", call_model)
+def invoke_rag(state: State) -> State:
+    logger.info("invoke_rag")
+    state["summary"] = state.get("summary", "")
+    response = rag_chain.invoke(state)
+    logger.info(response)
+    return {
+        "messages": [AIMessage(response["answer"])],
+    }
+
+
+graph_builder = StateGraph(state_schema=State)
+graph_builder.set_entry_point("summarize")
+graph_builder.add_node(summarize)
+graph_builder.add_node(retrieve)
+graph_builder.add_node(invoke_rag)
+graph_builder.add_edge("summarize", "retrieve")
+graph_builder.add_edge("retrieve", "invoke_rag")
+graph_builder.set_finish_point("invoke_rag")
 memory = MemorySaver()
-graph = workflow.compile(checkpointer=memory)
+graph = graph_builder.compile(checkpointer=memory)
 
 
-# Simulates receiving an http query from the crow api which invokes the LLM and
-# send messages to the Event stream.
 @app.route("/simulate_llm")
-async def simulate_llm():
+async def simulate_llm() -> Response:
     prompt = request.args.get("prompt")
     if not prompt:
         return Response("Missing 'prompt' parameter", HTTPStatus.BAD_REQUEST)
-    config: RunnableConfig = {"configurable": {"thread_id": "abc123"}}
 
-    async for event in graph.astream_events(
-        {"input": prompt},
-        config=config,
-        version="v1",
-        include_names=["interface_destined"],
-        debug=True,
-    ):
-        if isinstance(event.get("data").get("chunk"), AIMessageChunk):
-            sse.publish({"message": event.get("data").get("chunk").content})
+    # docs = conditions_collection.similarity_search(prompt)
+    config: RunnableConfig = {"configurable": {"thread_id": "abc1235"}}
+    try:
+
+        async for event in graph.astream_events(
+            {"input": prompt},
+            config=config,
+            version="v1",
+            include_names=["interface_destined"],
+            debug=True,
+        ):
+            if isinstance(event.get("data").get("chunk"), AIMessageChunk):
+                sse.publish({"message": event.get("data").get("chunk").content})
+
+    except Exception as e:
+        logger.error(e)
+        return jsonify(error="Resource not found"), 404
+
     return Response("", HTTPStatus.OK)
-
-
-# TODO the summarized input needs to be coherent with the rag system prompt.
