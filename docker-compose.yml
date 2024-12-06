@@ -1,6 +1,6 @@
 services:
   chromadb:
-    image: chromadb/chroma
+    image: chromadb/chroma:latest
     container_name: chromadb
     volumes:
       - chromadb:/chroma/chroma
@@ -22,12 +22,16 @@ services:
       context: .
       dockerfile: Dockerfile.api
     container_name: api
+    depends_on:
+      - chromadb
+      - redis
     environment:
       - OLLAMA_SERVER_URL="http://ollama:11434"
     ports:
       - 8001:8001
     volumes:
       - .:/app
+      - huggingface:/root/.cache/huggingface
     # entrypoint: ["sleep", "10000"]
 
   ollama:
@@ -41,3 +45,4 @@ services:
 volumes:
   chromadb:
   ollama:
+  huggingface:

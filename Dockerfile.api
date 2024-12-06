@@ -13,7 +13,3 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
 
 # Run app.py when the container launches
 CMD ["gunicorn", "main:app", "--worker-class", "gevent", "--bind", "0.0.0.0:8001"]
-
-#i seem to have set up caching of pip packages during image build
-# when i rebuild the image cached packages are used
-#triton package is failing with "Read timed out"

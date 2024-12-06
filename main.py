@@ -3,7 +3,6 @@ from tools.logger import logger
 from flask import Flask
 from http import HTTPStatus
 
-from langchain_chroma import Chroma
 from langchain.chains.retrieval import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from flask_sse import sse
@@ -32,57 +31,54 @@ llm = ChatOllama(
     model="mistral:latest", verbose=True, base_url=app_config.LLM_HOST_URL
 ).with_config(config=config)
 
+themis_collection = get_chroma_with_collection("constitution-1958")
+
 # TODO add summary and input to prompt
 rag_system_prompt = """
 Vous êtes un assistant qui rend le droit français plus accessible au grand public.
 Utilisez les informations suivantes pour répondre à la question posée.
 L'exactitude est primordiale : si vous ne trouvez pas l'information dans le contexte fourni, indiquez simplement que vous ne la connaissez pas.
-La réponse doit être en français et comporter au maximum 80 caractères.
+La réponse doit être en français et concise.
+
+Résumé de la conversation :
+{summary}
 
 <context>
 {context}
 </context>
 """
 
-contextualize_q_system_prompt = """
-Étant donné un historique de conversation et le dernier message de l'utilisateur,
-qui pourrait faire référence au contexte de cet historique,
-formulez un message autonome qui puisse être compris sans l'historique.
-Le message doit impérativement être en français.
-Ne répondez pas à la question ; reformulez simplement le message si nécessaire, ou renvoyez-le tel quel.
-"""
+# contextualize_q_system_prompt = """
+# Étant donné un historique de conversation et le dernier message de l'utilisateur,
+# qui pourrait faire référence au contexte de cet historique,
+# formulez un message autonome qui puisse être compris sans l'historique.
+# Le message doit impérativement être en français.
+# Ne répondez pas à la question ; reformulez simplement le message si nécessaire, ou renvoyez-le tel quel.
+# """
 
-contextualize_q_prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", contextualize_q_system_prompt),
-        MessagesPlaceholder("chat_history"),
-        ("human", "{input}"),
-    ]
-)
+# contextualize_q_prompt = ChatPromptTemplate.from_messages(
+#     [
+#         ("system", contextualize_q_system_prompt),
+#         MessagesPlaceholder("messages"),
+#         ("human", "{input}"),
+#     ]
+# )
 
-history_aware_retriever = create_history_aware_retriever(
-    llm, chroma_store.as_retriever(), contextualize_q_prompt
-)
+# history_aware_retriever = create_history_aware_retriever(
+#     llm, chroma_store.as_retriever(), contextualize_q_prompt
+# )
 
 rag_prompt = ChatPromptTemplate.from_messages(
     [
         ("system", rag_system_prompt),
-        MessagesPlaceholder("chat_history"),
+        MessagesPlaceholder("messages"),
         ("human", "{input}"),
     ]
 )
 
-summary_prompt_template = PromptTemplate(
-    input_variables=["conversation"],
-    template=(
-        "Résumé la conversation suivante de manière concise et claire :\n\n"
-        "{conversation}\n\n"
-        "Résumé :"
-    ),
-)
-qa_chain: Runnable = create_stuff_documents_chain(llm, qa_prompt)
+qa_chain: Runnable = create_stuff_documents_chain(llm, rag_prompt)
 # rag_chain: Runnable = create_retrieval_chain(history_aware_rag_retriever, qa_chain)
-rag_chain: Runnable = create_retrieval_chain(rag_collection.as_retriever(), qa_chain)
+rag_chain: Runnable = create_retrieval_chain(themis_collection.as_retriever(), qa_chain)
 
 from langgraph.graph import StateGraph
 from data_types import State
@@ -97,7 +93,8 @@ def summarize(state: State):
         return state
     response = invoke_summary_model(state)
     logger.info(f"summarized input : {response.content}")
-    return {"summary": response.content}
+    state["summary"] = response.content
+    return state
 
 
 def retrieve(state: State):
@@ -105,12 +102,11 @@ def retrieve(state: State):
     """Retrieve information related to a query."""
     q = state.get("summary", state["input"])
     logger.info(f"Simimarity search on : {q}")
-    retrieved_docs = conditions_collection.similarity_search(
-        q, k=2
+    retrieved_docs = themis_collection.similarity_search(
+        q, k=1
     )
-    return {
-        "context": retrieved_docs,
-    }
+    state["context"] = retrieved_docs
+    return state
 
 
 def invoke_rag(state: State) -> State:
@@ -118,9 +114,8 @@ def invoke_rag(state: State) -> State:
     state["summary"] = state.get("summary", "")
     response = rag_chain.invoke(state)
     logger.info(response)
-    return {
-        "messages": [AIMessage(response["answer"])],
-    }
+    state["messages"].append(AIMessage(response["answer"]))
+    return state
 
 
 graph_builder = StateGraph(state_schema=State)
@@ -134,7 +129,7 @@ graph_builder.set_finish_point("invoke_rag")
 memory = MemorySaver()
 graph = graph_builder.compile(checkpointer=memory)
 
-
+logger.info("graph compiled")
 @app.route("/simulate_llm")
 async def simulate_llm() -> Response:
     prompt = request.args.get("prompt")

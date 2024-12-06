@@ -41,7 +41,7 @@ def invoke_summary_model(state: State):
 
     if len(state["messages"]) < 3:
         # TODO add exception ?
-        logger.error("Messages history lust contain at least 3 messages to summarize")
+        logger.error("Messages history must contain at least 3 messages to summarize")
         return {}
     return chain.invoke(state)
 
