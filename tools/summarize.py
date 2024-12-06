@@ -12,7 +12,7 @@ summary_model = ChatOllama(
 )
 
 system_prompt = (
-    "Résumé progressivement les lignes de conversation fournies, en ajoutant au résumé précédent pour retourner un nouveau résumé.\n\n"
+    "Résumer progressivement les lignes de conversation fournies, en ajoutant au résumé précédent pour retourner un nouveau résumé.\n\n"
     "EXEMPLE\n"
     "Résumé actuel :\n"
     "L'humain demande ce que l'IA pense de l'intelligence artificielle. L'IA pense que l'intelligence artificielle est une force positive.\n\n"
