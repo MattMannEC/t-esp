@@ -13,8 +13,8 @@ from tools.logger import logger
 
 # model = HuggingFaceEmbeddings(model_name=f"{app_config.LOCAL_MODELS_PATH}/sentence-transformers/all-mpnet-base-v2")
 
-def get_chroma_with_collection(collection_name = "langchain", host: str = "chromadb") -> Chroma:
-    chroma_client: ClientAPI = chromadb.HttpClient(host=host, port=8000)
+def get_chroma_with_collection(collection_name = "langchain", host: str = app_config.CHROMA_SERVICE_NAME) -> Chroma:
+    chroma_client: ClientAPI = chromadb.HttpClient(host=host, port=app_config.CHROMA_PORT)
     logger.info(f"Using chroma version: {chroma_client.get_version()}")
     return Chroma(
         collection_name=collection_name,

@@ -22,11 +22,11 @@ set_debug(False)
 # Run app
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all origins
-app.config["REDIS_URL"] = "redis://redis"
+app.config["REDIS_URL"] = app_config.REDIS_URL
 logger.info("Register blueprint")
 app.register_blueprint(sse, url_prefix="/stream")
 
-config: RunnableConfig = {"run_name": "interface_destined"}
+config: RunnableConfig = app_config.LLM_STREAM_RUN_CONF
 llm = ChatOllama(
     model="mistral:latest", verbose=True, base_url=app_config.LLM_HOST_URL
 ).with_config(config=config)
@@ -152,6 +152,6 @@ async def simulate_llm() -> Response:
 
     except Exception as e:
         logger.error(e)
-        return jsonify(error="Resource not found"), 404
+        return Response("", HTTPStatus.BAD_REQUEST)
 
     return Response("", HTTPStatus.OK)
