@@ -56,7 +56,7 @@ export default {
     sendMessage() {
       if (this.prompt.trim() !== '') {
         this.messages.push({ sender: 'user', text: this.prompt });
-        fetch(`http://127.0.0.1:8001/simulate_llm?prompt=${encodeURIComponent(this.prompt)}`)
+        fetch(`http://localhost:8001/simulate_llm?prompt=${encodeURIComponent(this.prompt)}`)
           .then(response => response.json())
           .then(data => {
             // Handle the response data if needed
