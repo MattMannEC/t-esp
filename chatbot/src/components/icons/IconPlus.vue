@@ -7,6 +7,7 @@
       :fill="color"
       role="img"
       aria-label="Plus icon"
+      class="icon-plus"
   >
     <path d="M12 5v6H6v2h6v6h2v-6h6v-2h-6V5h-2z" />
   </svg>
@@ -31,3 +32,10 @@ export default {
   },
 };
 </script>
+
+
+<style scoped>
+.icon-plus:hover {
+  color: white;
+}
+</style>

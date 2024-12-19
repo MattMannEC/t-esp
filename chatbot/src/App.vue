@@ -10,9 +10,10 @@
         >
           <template v-if="msg.sender === 'bot'" class="received-container">
             <img src="./assets/image.png" alt="Bot Icon" class="icon" />
-            <div v-html="formatMessage(msg.text)" class="received-text"></div>
+            <div v-html="formatMessage(msg.text)" class="received-text" :class="{'loading': loading && index === messages.length - 1}"></div>
           </template>
           <div v-else v-html="formatMessage(msg.text)"></div>
+
         </div>
       </div>
       <div class="input-container">
@@ -23,7 +24,7 @@
         />
         <button @click="sendMessage">Send</button>
         <button @click="disconnect" v-if="eventSource">Disconnect</button>
-        <IconPlus @click="resumeText"/>
+        <IconPlus @click="resumeText" class="summarize-button-container"/>
       </div>
     </div>
   </div>
@@ -46,7 +47,7 @@ export default {
         // { sender: 'bot', text: 'Here is a really funny joke that i think that you will like. Tell me if you like it or not... Why don’t scientists trust atoms?\nBecause they make up everything!' },
       ],
       eventSource: null,
-      loading: false
+      loading: false,
     };
   },
   mounted() {
@@ -86,6 +87,13 @@ export default {
       return message.replace(/(?:\r\n|\r|\n)/g, '<br>');
     },
     resumeText() {
+      if(this.loading === true) return
+      console.log('this messages', this.messages)
+      this.loading = true
+      this.messages.push( {
+        sender: 'bot',
+        text: 'Traitement de la requête en cours...'
+      })
       const text = 'PRÉAMBULE\n' +
           'Le peuple français proclame solennellement son attachement aux Droits de l\'homme et aux principes de la souveraineté nationale tels qu\'ils ont été définis par la Déclaration de 1789, confirmée et complétée par le préambule de la Constitution de 1946, ainsi qu\'aux droits et devoirs définis dans la Charte de l\'environnement de 2004.\n' +
           '\n' +
@@ -143,11 +151,8 @@ export default {
       })
           .then(response => response.json())
           .then(data => {
-            this.loading = false;
-            this.messages.push({
-              sender: 'bot',
-              text: data.summary
-            });
+            this.loading = false
+            this.messages[this.messages.length - 1].text = data.summary
           })
           .catch((error) => console.error('Erreur:', error));
     }
@@ -221,6 +226,7 @@ h1 {
 .input-container {
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 
 input {
@@ -252,5 +258,11 @@ button:disabled {
   width: 30px;
   height: 30px;
   margin-right: 10px;
+}
+
+.summarize-button-container:hover {
+  background: #74747430;
+  border-radius: 5px;
+  cursor: pointer;
 }
 </style>

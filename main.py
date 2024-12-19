@@ -183,7 +183,7 @@ def summarize_recursively(text: str, max_length: int = 50) -> str:
 
     try:
         summary_prompt = PromptTemplate(
-            input_variables=["text"],
+            input_variables=["text", "max_length"],
             template=(
                 "Vous êtes un assistant expert en rédaction. Votre tâche est de résumer "
                 "le texte ci-dessous en français, de manière parfaitement claire, concise et fidèle au contenu. "
@@ -194,7 +194,7 @@ def summarize_recursively(text: str, max_length: int = 50) -> str:
                 "Résumé (en {max_length} caractères maximum) :"
             )
         )
-        prompt = summary_prompt.format(text=truncated_text)
+        prompt = summary_prompt.format(text=truncated_text, max_length=max_length)
         response = llm.invoke(prompt)
 
         logger.debug(f"Réponse brute du LLM : {response}")
