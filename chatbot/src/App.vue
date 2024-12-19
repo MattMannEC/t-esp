@@ -10,7 +10,8 @@
         >
           <template v-if="msg.sender === 'bot'" class="received-container">
             <img src="./assets/image.png" alt="Bot Icon" class="icon" />
-            <div v-html="formatMessage(msg.text)" class="received-text" :class="{'loading': loading && index === messages.length - 1}"></div>
+            <div v-if="loading && messages.length - 1 === index" class="received-text">{{msg.text}}{{dots}}</div>
+            <div v-else v-html="formatMessage(msg.text)" class="received-text"></div>
           </template>
           <div v-else v-html="formatMessage(msg.text)"></div>
 
@@ -48,6 +49,7 @@ export default {
       ],
       eventSource: null,
       loading: false,
+      dots: ''
     };
   },
   mounted() {
@@ -62,6 +64,16 @@ export default {
     };
   },
   methods: {
+    dot() {
+      const maxDots = 2;
+      this.dotInterval = setInterval(() => {
+        this.dots = this.dots.length < maxDots ? this.dots + '.' : '';
+      }, 500);
+    },
+    stopDots() {
+      clearInterval(this.dotInterval);
+      this.dots = '';
+    },
     sendMessage() {
       if (this.prompt.trim() !== '') {
         this.messages.push({ sender: 'user', text: this.prompt });
@@ -88,12 +100,12 @@ export default {
     },
     resumeText() {
       if(this.loading === true) return
-      console.log('this messages', this.messages)
       this.loading = true
       this.messages.push( {
         sender: 'bot',
-        text: 'Traitement de la requête en cours...'
+        text: 'Traitement de la requête en cours.'
       })
+      this.dot()
       const text = 'PRÉAMBULE\n' +
           'Le peuple français proclame solennellement son attachement aux Droits de l\'homme et aux principes de la souveraineté nationale tels qu\'ils ont été définis par la Déclaration de 1789, confirmée et complétée par le préambule de la Constitution de 1946, ainsi qu\'aux droits et devoirs définis dans la Charte de l\'environnement de 2004.\n' +
           '\n' +
@@ -152,9 +164,14 @@ export default {
           .then(response => response.json())
           .then(data => {
             this.loading = false
+            this.stopDots()
             this.messages[this.messages.length - 1].text = data.summary
           })
-          .catch((error) => console.error('Erreur:', error));
+          .catch((error) => {
+            this.loading = false
+            this.stopDots()
+            console.error('Erreur:', error)
+          });
     }
   }
 };
