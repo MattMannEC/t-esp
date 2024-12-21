@@ -1,7 +1,7 @@
 <template>
   <div class="component-container">
     <div class="header-container">
-      <h1 class="title-container">Constitution Française de 1958</h1>
+      <h1 class="title-container">Constitution Française du 4 octobre 1958</h1>
       <div class="search-container">
         <IconBase name="magnifying-glass" type="fas" class="icon-container" />
         <input type="search" placeholder="Rechercher parmi les articles..." class="input-container"/>
@@ -17,7 +17,7 @@
 <script>
 import IconBase from "@/components/icons/IconBase.vue";
 import ArrayComponent from "@/components/article/ArrayComponent.vue";
-import { useConstitutionStore } from '@/stores/constitutionStore/ConstitutionStore.js';
+import { useConstitutionStore } from "@/store/constitutionStore/ConstitutionStore.js"
 
 export default{
   components: {
@@ -61,6 +61,7 @@ export default{
   border-radius: 5px;
   width: 250px;
   padding: .5rem;
+  margin-bottom: .5rem;
   box-shadow: 0px 1px #F2F2F5;
   justify-content: start;
 }
