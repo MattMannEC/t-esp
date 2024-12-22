@@ -2,7 +2,12 @@
   <table class="table-container">
     <thead class="head-container">
     <tr class="row-container remove-border">
-      <th v-for="(title, index) in titles" :key="index" class="column-container" :class="{'remove-border': index === titles.length - 1}">
+      <th
+        v-for="(title, index) in titles"
+        :key="index"
+        class="column-container"
+        :class="{'remove-border': index === titles.length - 1}"
+      >
         {{ title }}
       </th>
     </tr>
@@ -13,11 +18,15 @@
         <tr class="row-container remove-rounded" :class="{'remove-border': index !== articles.length - 1}">
           <th class="column-container remove-border first-column">
             <button @click="toggleRow(index, false)" class="button-container chevron-container">
-              <IconBase :name="show && indexSelected === index ? 'chevron-down' : 'chevron-right'" type="fas" />
+              <IconBase
+                :name="show && indexSelected === index ? 'chevron-down' : 'chevron-right'"
+                type="fas"
+                action="click"
+              />
             </button>
             <span class="span-container">{{ item.title }}</span>
           </th>
-          <th class="column-container remove-border title-apercu-container">{{ item.aperçu }}</th>
+          <th class="column-container remove-border">{{ item.aperçu }}</th>
           <th class="column-container remove-border">
             <button class="button-container">
               <IconBase type="far" name="comment-dots" />
@@ -27,7 +36,7 @@
         <!-- Child Rows -->
         <tr v-if="show && indexSelected === index" class="child-row">
           <td colspan="3" class="child-container">
-            <div class="color-container"></div>
+            <div class="color-container" />
             <table class="child-table">
               <tbody>
               <tr
@@ -37,7 +46,11 @@
               >
                 <th class="column-container remove-border">
                   <button @click="toggleRow(indexArticle, true)" class="button-container chevron-container">
-                    <IconBase :name="showChild && indexChildSelected === indexArticle ? 'chevron-down' : 'chevron-right'" type="fas" />
+                    <IconBase
+                      :name="showChild && indexChildSelected === indexArticle ? 'chevron-down' : 'chevron-right'"
+                      type="fas"
+                      action="click"
+                    />
                   </button>
                   <span class="span-container">{{ article.title }}</span>
                 </th>
@@ -46,7 +59,7 @@
                 </th>
                 <th class="column-container remove-border">
                   <button class="button-container">
-                    <IconBase type="far" name="comment-dots" />
+                    <IconBase type="far" name="comment-dots" action="click" />
                   </button>
                 </th>
               </tr>
@@ -60,10 +73,11 @@
       <tr>
         <th>
           <PaginationComponent
-              :pages="numberPages"
-              :number-articles="numberArticles"
-              :total-articles="totalArticles"
-              @pageSelected="updatePageSelected" />
+            :pages="numberPages"
+            :number-articles="numberArticles"
+            :total-articles="totalArticles"
+            @pageSelected="updatePageSelected"
+          />
         </th>
       </tr>
     </tfoot>
@@ -151,10 +165,15 @@ export default {
   width: 100%;
   color: #2e3e8a;
   border-collapse: collapse;
+  overflow-y: hidden;
+  max-height: 30rem;
 }
 
 .body-container {
+  display: block;
+  max-height: 30rem;
   overflow-y: auto;
+  width: 100%;
 }
 
 .row-container {
@@ -167,6 +186,7 @@ export default {
 
 .row-container.remove-border {
   border-bottom: 0;
+  flex-shrink: 0;
 }
 
 .column-container {
@@ -194,17 +214,17 @@ export default {
 
 .button-container {
   all: unset;
-  cursor: pointer;
   margin-right: 4rem;
   margin-left: 0.5rem;
 }
 
+
 .chevron-container {
-  width: 30px;
+  margin-right: 4rem;
 }
 
 .column-container.child-text-container {
-  max-width: 379px;
+  max-width: 30rem;
   text-overflow: ellipsis !important;
   white-space: nowrap;
   overflow: hidden;
@@ -222,7 +242,7 @@ export default {
 }
 
 .child-row {
-  width: 100%;
+  display: block;
 }
 
 .color-container {

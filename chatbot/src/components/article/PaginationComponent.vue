@@ -1,15 +1,15 @@
 <template>
-  <div class="body-container">
+  <div class="main-container">
     <div class="number-article-container">
       <span>{{numberArticles[0]}} to {{numberArticles[1]}} of {{totalArticles}}</span>
     </div>
     <div class="pagination-container">
       <button>
-        <IconBase v-if="page !== 1" @click="page -= 1" type="fas" name="chevron-left" />
+        <IconBase v-if="page !== 1" @click="page -= 1" type="fas" name="chevron-left" action="click" />
       </button>
       <span class="number-page-container">{{page}} to {{pages}}</span>
       <button>
-        <IconBase v-if="page !== pages" @click="page += 1" type="fas" name="chevron-right" />
+        <IconBase v-if="page !== pages" @click="page += 1" type="fas" name="chevron-right" action="click" />
       </button>
     </div>
   </div>
@@ -56,15 +56,16 @@ export default {
 </script>
 
 <style scoped>
-.body-container {
+.main-container {
   width: 100%;
   display: flex;
+  align-items: center;
+  flex-direction: row;
   justify-content: end;
 }
 
 button {
   all: unset;
-  cursor: pointer;
 }
 
 span {
