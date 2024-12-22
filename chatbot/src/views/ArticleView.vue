@@ -4,13 +4,17 @@
       <h1 class="title-container">Constitution Française du 4 octobre 1958</h1>
       <div class="search-container">
         <IconBase name="magnifying-glass" type="fas" class="icon-container" />
-        <input type="search" placeholder="Rechercher parmi les articles..." class="input-container"/>
+        <input
+            type="search"
+            placeholder="Rechercher parmi les articles..."
+            v-model="searchItem"
+            class="input-container"/>
       </div>
     </div>
     <div class="body-container">
       <TableComponent
         :titles="titles"
-        :articles="constitution"
+        :articles="searchItem ? articles : constitution"
       />
     </div>
   </div>
@@ -28,12 +32,44 @@ export default{
     TableComponent
   },
 
+  data () {
+    return {
+      searchItem: ''
+    }
+  },
+
   computed: {
     titles () {
       return ['Articles', 'Aperçu', 'Actions']
     },
     constitution () {
       return useConstitutionStore().getConstitution
+    },
+    articles() {
+      return this.constitution
+          .map(title => {
+            const isTitleMatching = title.title.toLowerCase().includes(this.searchItem.toLowerCase())
+                || title.aperçu.toLowerCase().includes(this.searchItem.toLowerCase())
+
+            const matchingChildren = title.articles.filter(article =>
+                article.title.toLowerCase().includes(this.searchItem.toLowerCase()))
+
+            if (isTitleMatching) {
+              return {
+                ...title
+              };
+            }
+
+            if (matchingChildren.length > 0) {
+              return {
+                ...title,
+                articles: matchingChildren
+              };
+            }
+
+            return null
+          })
+          .filter(title => title !== null)
     }
   },
 }
