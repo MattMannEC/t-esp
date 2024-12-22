@@ -8,7 +8,10 @@
       </div>
     </div>
     <div class="body-container">
-      <ArrayComponent :titles="titles" :articles="constitution"></ArrayComponent>
+      <TableComponent
+        :titles="titles"
+        :articles="constitution"
+      />
     </div>
   </div>
 
@@ -16,18 +19,18 @@
 
 <script>
 import IconBase from "@/components/icons/IconBase.vue";
-import ArrayComponent from "@/components/article/ArrayComponent.vue";
+import TableComponent from "@/components/article/TableComponent.vue";
 import { useConstitutionStore } from "@/store/constitutionStore/ConstitutionStore.js"
 
 export default{
   components: {
     IconBase,
-    ArrayComponent
+    TableComponent
   },
 
   computed: {
     titles () {
-      return ['Article', 'Aperçu', 'Action']
+      return ['Articles', 'Aperçu', 'Actions']
     },
     constitution () {
       return useConstitutionStore().getConstitution

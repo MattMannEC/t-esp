@@ -20,7 +20,7 @@
   color: #949ED1;
   height: 100%;
   width: 100%;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 </style>

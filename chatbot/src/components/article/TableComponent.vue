@@ -8,7 +8,7 @@
     </tr>
     </thead>
     <tbody>
-    <template v-for="(item, index) in articles" :key="index">
+    <template v-for="(item, index) in displayArticles" :key="index">
       <!-- Parent Row -->
       <tr class="row-container remove-rounded" :class="{'remove-border': index !== articles.length - 1}">
         <th class="column-container remove-border first-column">
@@ -31,7 +31,7 @@
           <table class="child-table">
             <tbody>
             <tr
-                v-for="(article, indexArticle) in articles[indexSelected].articles"
+                v-for="(article, indexArticle) in displayArticles[indexSelected].articles"
                 :key="indexArticle"
                 class="row-container remove-rounded" :class="{'remove-border': index !== articles.length - 1}"
             >
@@ -55,16 +55,29 @@
         </td>
       </tr>
     </template>
+    <tfoot class="pagination-container">
+      <tr>
+        <th>
+          <PaginationComponent
+              :pages="numberPages"
+              :number-articles="numberArticles"
+              :total-articles="totalArticles"
+              @pageSelected="updatePageSelected" />
+        </th>
+      </tr>
+    </tfoot>
     </tbody>
   </table>
 </template>
 
 <script>
 import IconBase from "@/components/icons/IconBase.vue";
+import PaginationComponent from "./PaginationComponent.vue"
 
 export default {
   components: {
     IconBase,
+    PaginationComponent
   },
 
   data() {
@@ -72,7 +85,8 @@ export default {
       show: false,
       indexSelected: null,
       indexChildSelected: null,
-      showChild: null
+      showChild: null,
+      pageSelected: 1
     };
   },
 
@@ -85,6 +99,31 @@ export default {
       type: Array,
       default: [],
     },
+    articleToDisplay: {
+      type: Number,
+      default: 10
+    }
+  },
+
+  computed: {
+    numberPages () {
+      return Math.ceil(this.articles.length / this.articleToDisplay)
+    },
+    displayArticles () {
+      const startIndex = (this.pageSelected - 1) * this.articleToDisplay
+      const endIndex = this.pageSelected * this.articleToDisplay
+      return this.articles.slice(startIndex, endIndex)
+    },
+    numberArticles () {
+      if(this.displayArticles.length === this.articleToDisplay) {
+        return [(this.pageSelected - 1) * this.articleToDisplay + 1, this.pageSelected * this.articleToDisplay]
+      } else {
+        return [(this.pageSelected - 1) * this.articleToDisplay + 1, (this.pageSelected - 1) * this.articleToDisplay + this.displayArticles.length]
+      }
+    },
+    totalArticles () {
+      return this.articles.length
+    }
   },
 
   methods: {
@@ -97,6 +136,9 @@ export default {
         this.show = this.indexSelected !== null;
       }
     },
+    updatePageSelected (value) {
+      this.pageSelected = value
+    }
   },
 };
 </script>
@@ -130,7 +172,6 @@ export default {
   border-right: 0.2rem solid #EBEDFB;
   font-weight: bold;
   text-align: start;
-  vertical-align: text-top;
 }
 
 
@@ -184,6 +225,17 @@ export default {
   width: .2rem;
   background-color: #F6F8FE;
   border: 2px solid #EBEDFB;
+}
+
+.pagination-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  border: 1px solid #EBEDFB;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  padding: .7rem;
 }
 
 
