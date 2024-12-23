@@ -1,6 +1,6 @@
 <template>
-  <div class="container" :class="[action, size]">
-    <FontAwesomeIcon :icon="icon" />
+  <div class="container" :class="[action, size, background, color]">
+    <FontAwesomeIcon :icon="icon" :size="size" />
   </div>
 </template>
 <script>
@@ -25,7 +25,18 @@ export default {
     size: {
       type: String,
       required: false,
-      default: 'md'
+      default: 'md',
+      validator: (value) => ['sm', 'md', 'lg', 'xl'].includes(value)
+    },
+    background: {
+      type: String,
+      required: false,
+      default: ''
+    },
+    color: {
+      type: String,
+      required: false,
+      default: ''
     }
   },
 
@@ -51,9 +62,29 @@ export default {
   height: 1rem;
 }
 
+.xl {
+  width: 2.2rem;
+  height: 2.2rem;
+}
+
 .click:hover {
   cursor: pointer;
   background-color: #C0CAF8;
   color: white;
 }
+
+.focus {
+  cursor: pointer;
+  background-color: #C0CAF8;
+}
+
+.deep-blue {
+  background-color: #405BDD;
+  color: white;
+}
+
+.deep-blue-color {
+  color: #405BDD;
+}
+
 </style>

@@ -1,11 +1,20 @@
 <template>
   <div id="app">
-    <RouterView/>
+    <SidebarComponent/>
+    <div class="router">
+      <RouterView/>
+    </div>
   </div>
 </template>
 
 <script>
 
+import {defineComponent} from "vue";
+import SidebarComponent from "@/components/sidebar/SidebarComponent.vue";
+
+export default defineComponent({
+  components: {SidebarComponent}
+})
 </script>
 
 <style scoped>
@@ -13,7 +22,6 @@
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   text-align: center;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   margin: 0;
@@ -22,6 +30,11 @@
   width: 100%;
   font-size: 12px;
   padding: 0;
+}
+
+.router {
+  padding: 0 2rem;
+  width: 100%;
 }
 
 </style>
