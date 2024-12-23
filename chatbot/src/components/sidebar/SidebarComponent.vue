@@ -10,20 +10,17 @@
     </div>
 
     <div class="navigation-container">
-      <RouterLink :to="{ name: 'article' }">
+      <RouterLink
+          v-for="(item, index) in navigation"
+          :key="index"
+          :to="{ name: item.name }"
+          @mouseenter="hover = index"
+          @mouseleave="hover = null"
+      >
         <IconBase
-          type="fas"
-          name="house"
-          :action="isSameRoute ('article') ?'focus' : ''"
-          size="xl"
-          color="deep-blue-color"
-        />
-      </RouterLink>
-      <RouterLink :to="{ name: 'chatbot' }">
-        <IconBase
-          type="far"
-          name="comment-dots"
-          :action="isSameRoute ('chatbot') ?'focus' : ''"
+          :type="item.icon.type"
+          :name="item.icon.name"
+          :action="isSameRoute(item.name) || isHover(index) ?'focus' : ''"
           size="xl"
           color="deep-blue-color"
         />
@@ -40,15 +37,43 @@ export default {
     IconBase
   },
 
+  data() {
+    return {
+      hover: null
+    }
+  },
+
   computed: {
     currentRoute () {
       return this.$route.name
+    },
+    navigation () {
+      const items = [
+        {
+          name: 'article',
+          icon: {
+            type: 'fas',
+            name: 'house',
+          }
+        },
+        {
+          name: 'chatbot',
+          icon: {
+            type: 'far',
+            name: 'comment-dots',
+          }
+        }
+      ]
+      return items
     }
   },
 
   methods: {
     isSameRoute (route) {
       return this.currentRoute === route
+    },
+    isHover (index) {
+      return this.hover === index
     }
   }
 }
