@@ -20,7 +20,7 @@
         <IconBase
           :type="item.icon.type"
           :name="item.icon.name"
-          :action="isSameRoute(item.name) || isHover(index) ?'focus' : ''"
+          :action="isSameRoute(item.name) || isHover(index) ? 'focus' : ''"
           size="xl"
           color="deep-blue-color"
         />
@@ -83,7 +83,7 @@ export default {
 
 .sidebar-main-container {
   height: 100%;
-  width: 4rem;
+  width: 4.5rem;
   background-color: #E0E4FC;
 }
 

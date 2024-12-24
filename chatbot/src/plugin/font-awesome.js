@@ -7,7 +7,8 @@ import {
     faChevronDown,
     faChevronLeft,
     faScaleBalanced,
-    faHouse
+    faHouse,
+    faRobot
 } from '@fortawesome/free-solid-svg-icons';
 import { faCommentDots } from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
@@ -21,7 +22,8 @@ library.add(
     faCommentDots,
     faChevronLeft,
     faScaleBalanced,
-    faHouse
+    faHouse,
+    faRobot
 );
 
 export {FontAwesomeIcon};

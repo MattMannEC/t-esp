@@ -58,8 +58,8 @@ export default {
 }
 
 .md {
-  width: 1rem;
-  height: 1rem;
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
 .xl {
@@ -76,6 +76,7 @@ export default {
 .focus {
   cursor: pointer;
   background-color: #C0CAF8;
+  border: 1px solid #B0BCF7;
 }
 
 .deep-blue {

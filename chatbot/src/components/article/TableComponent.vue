@@ -28,8 +28,8 @@
           </th>
           <th class="column-container remove-border">{{ item.aperçu }}</th>
           <th class="column-container remove-border">
-            <button class="button-container">
-              <IconBase type="far" name="comment-dots" />
+            <button @click="showDrawer('chatBotDrawer', item.articles)" class="button-container">
+              <IconBase type="far" name="comment-dots" action="click" />
             </button>
           </th>
         </tr>
@@ -58,7 +58,7 @@
                   {{ article.text }}
                 </th>
                 <th class="column-container remove-border">
-                  <button class="button-container">
+                  <button @click="showDrawer('chatBotDrawer', article)"  class="button-container">
                     <IconBase type="far" name="comment-dots" action="click" />
                   </button>
                 </th>
@@ -87,6 +87,7 @@
 <script>
 import IconBase from "@/components/icons/IconBase.vue";
 import PaginationComponent from "./PaginationComponent.vue"
+import {useDrawerStore} from "@/store/drawerStore/DrawerStore.js";
 
 export default {
   components: {
@@ -137,6 +138,9 @@ export default {
     },
     totalArticles () {
       return this.articles.length
+    },
+    drawerStore () {
+      return useDrawerStore()
     }
   },
 
@@ -152,6 +156,10 @@ export default {
     },
     updatePageSelected (value) {
       this.pageSelected = value
+    },
+    showDrawer (name, data) {
+      console.log(data)
+      this.drawerStore.openDrawer(name, data)
     }
   },
 };
