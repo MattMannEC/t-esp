@@ -64,9 +64,7 @@ export default {
   justify-content: end;
 }
 
-button {
-  all: unset;
-}
+
 
 span {
   font-weight: bold;

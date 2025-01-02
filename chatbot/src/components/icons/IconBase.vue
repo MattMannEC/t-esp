@@ -88,4 +88,8 @@ export default {
   color: #405BDD;
 }
 
+.error {
+  color: #EF5350;
+}
+
 </style>

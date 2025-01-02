@@ -16,50 +16,63 @@ export const useChatStore = defineStore('chat', {
             if (!chat) {
                 this.chats.push({
                     id: data.id,
-                    messages: data.messages || [],
+                    messages: [data.message],
                 });
             } else {
-                if (data.messages && data.messages.length > 0) {
-                    chat.messages.push(...data.messages);
+                const lastMessage = chat.messages[chat.messages.length - 1]
+                if (lastMessage?.loading) {
+                    chat.messages[chat.messages.length - 1] = {
+                        ...data.message,
+                        loading: undefined,
+                    }
+                } else {
+                    chat.messages.push(data.message)
                 }
             }
         },
         async summarize(id, articles) {
-            let chat = this.getChatById(id);
-
-            if (!chat) {
-                chat = { id, messages: [] };
-                this.chats.push(chat);
+            const loadingMessage = {
+                sender: 'bot',
+                text: 'Résumé en cours.',
+                loading: true
             }
-
-            const text = articles
+            let chat = this.getChatById(id) || {id, messages: [loadingMessage]}
+            if (!chat || chat.length === 0) {
+                this.chats.push(chat)
+            }
+            else {
+                this.updateChat({id, message: loadingMessage})
+            }
+            const text = typeof articles === 'array' ? articles
                 .map((article) => `${article.title}\n${article.text}`)
-                .join('\n');
-
+                .join('\n') : `${articles.title}\n${articles.text}`
             try {
                 const response = await fetch('http://127.0.0.1:8001/summarize', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text }),
                 });
-
                 if (!response.ok) {
                     throw new Error(`Erreur API: ${response.status}`);
                 }
-
                 const result = await response.json();
-
-                const botMessage = {
+                const messageBot = {
                     sender: 'bot',
                     text: result.summary,
                 };
-
                 this.updateChat({
                     id,
-                    messages: [botMessage],
+                    message: messageBot,
                 });
             } catch (error) {
-                console.error('Erreur lors de l’appel à l’API de résumé :', error);
+                console.error('Erreur lors du résumé :', error);
+                this.updateChat({
+                    id,
+                    message: {
+                        sender: 'bot',
+                        text: error,
+                    }
+                })
             }
         },
     },
