@@ -1,6 +1,7 @@
 services:
   chromadb:
-    image: chromadb/chroma
+    image: chromadb/chroma:latest
+    container_name: chromadb
     volumes:
       - chromadb:/chroma/chroma
     environment:
@@ -9,10 +10,39 @@ services:
       - ANONYMIZED_TELEMETRY=${ANONYMIZED_TELEMETRY:-FALSE}    
     ports:
       - 8000:8000
+
   redis:
     image: redis:latest
+    container_name: redis
     ports:
       - "6379:6379"
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: api
+    depends_on:
+      - chromadb
+      - redis
+    environment:
+      - OLLAMA_SERVER_URL="http://ollama:11434"
+    ports:
+      - 8001:8001
+    volumes:
+      - .:/app
+      - huggingface:/root/.cache/huggingface
+    # entrypoint: ["sleep", "10000"]
+
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - 11434:11434
+
 volumes:
   chromadb:
+  ollama:
+  huggingface:
