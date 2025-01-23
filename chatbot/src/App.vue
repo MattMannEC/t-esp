@@ -39,16 +39,18 @@ export default {
         // { sender: 'bot', text: 'Here is a really funny joke that i think that you will like. Tell me if you like it or not... Why don’t scientists trust atoms?\nBecause they make up everything!' },
       ],
       eventSource: null,
+      userId: 0
     };
   },
   mounted() {
+    this.userId = Math.floor(Math.random() * 1000000);
     this.eventSource = new EventSource('http://localhost:8001/stream');
     this.eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (this.messages.length === 0 || this.messages[this.messages.length - 1].sender !== 'bot') {
-        this.messages.push({ sender: 'bot', text: data.message });
+        this.messages.push({ sender: 'bot', text: data.value });
       } else {
-        this.messages[this.messages.length - 1].text += data.message;
+        this.messages[this.messages.length - 1].text += data.value;
       }
     };
   },
@@ -56,7 +58,7 @@ export default {
     sendMessage() {
       if (this.prompt.trim() !== '') {
         this.messages.push({ sender: 'user', text: this.prompt });
-        fetch(`http://localhost:8001/simulate_llm?prompt=${encodeURIComponent(this.prompt)}`)
+        fetch(`http://localhost:8001/invoke?prompt=${encodeURIComponent(this.prompt)}&user_id=${this.userId}`)
           .then(response => response.json())
           .then(data => {
             // Handle the response data if needed

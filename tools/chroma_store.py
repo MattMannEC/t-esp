@@ -3,7 +3,7 @@ import chromadb
 from chromadb.api import ClientAPI
 from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
-from config import app_config
+from classes.config import app_config
 
 model = HuggingFaceEmbeddings(
     model_name="dangvantuan/french-embedding-LongContext",

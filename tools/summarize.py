@@ -1,6 +1,6 @@
 from tools.logger import logger
-from data_types import State
-from config import app_config
+from classes.data_types import State
+from classes.config import app_config
 
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
