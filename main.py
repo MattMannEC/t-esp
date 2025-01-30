@@ -40,7 +40,7 @@ async def invoke() -> Response:
             {"input": prompt},
             config=config,
             version="v1",
-            include_names=["interface_destined"],
+            include_names=["interface_destined"]
         ):
             if isinstance(event.get("data").get("chunk"), AIMessageChunk):
                 sse.publish({"value": event.get("data").get("chunk").content})
