@@ -63,25 +63,25 @@ def load(file_path: str, progress: str):
     print(f"Vectors stored for {file_path}. Execution time: {execution_time:.2f} seconds")
     return execution_time
 
+def load_from_dir(dir: str, sleep: int):
+    # List all filenames ending with .pdf
+    pdf_files: list[str] = [file for file in os.listdir(dir) if file.endswith('.pdf')]
 
-# Define the folder path
-# folder_path = "legifrance_codes"
-folder_path = "large_documents"
+    # Dictionary to store execution times for each file
+    execution_report = {}
 
-# List all filenames ending with .pdf
-pdf_files: list[str] = [file for file in os.listdir(folder_path) if file.endswith('.pdf')]
+    # Process each PDF and track execution time
+    for f in range(0, len(pdf_files)):
+        file_path = f"{dir}/{pdf_files[f]}"
+        execution_time = load(file_path, f"{f+1} / {len(pdf_files)}")
+        execution_report[pdf_files[f]] = execution_time
+        sleep(10) # Free VRAM
 
-# Dictionary to store execution times for each file
-execution_report = {}
+    # Print summary report
+    print("\n=== Execution Time Report ===")
+    for file_name, exec_time in execution_report.items():
+        print(f"{file_name}: {exec_time:.2f} seconds")
 
-# Process each PDF and track execution time
-for f in range(0, len(pdf_files)):
-    file_path = f"{folder_path}/{pdf_files[f]}"
-    execution_time = load(file_path, f"{f+1} / {len(pdf_files)}")
-    execution_report[pdf_files[f]] = execution_time
-    sleep(30)
 
-# Print summary report
-print("\n=== Execution Time Report ===")
-for file_name, exec_time in execution_report.items():
-    print(f"{file_name}: {exec_time:.2f} seconds")
+load_from_dir("large_documents", 30)
+load_from_dir("documents", 10)
