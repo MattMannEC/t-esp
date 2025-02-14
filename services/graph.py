@@ -20,10 +20,10 @@ set_debug(False)
 
 config: RunnableConfig = app_config.LLM_STREAM_RUN_CONF
 llm = ChatOllama(
-    model="mistral:latest", verbose=True, base_url=app_config.LLM_HOST_URL
+    model="qwen2.5:14b", verbose=True, base_url=app_config.LLM_HOST_URL
 ).with_config(config=config)
 
-themis_collection = get_chroma_with_collection("codes_20250124")
+themis_collection = get_chroma_with_collection("route_et_travail_20250213")
 
 
 qa_chain: Runnable = create_stuff_documents_chain(llm, rag_prompt)
@@ -49,6 +49,8 @@ def retrieve(state: State):
     q = state.get("summary", state["input"])
     logger.info(f"Simimarity search on : {q}")
     retrieved_docs = themis_collection.similarity_search(q, k=3)
+    if len(retrieved_docs) < 1:
+        raise Exception("Node retrieve: similarity search didn't return any documents")
     state["context"] = retrieved_docs
     return state
 
