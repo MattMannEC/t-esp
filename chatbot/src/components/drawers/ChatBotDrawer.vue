@@ -59,15 +59,10 @@ export default {
   data () {
     return {
       error: null,
-      loading: false,
       dotsCount: '',
       dotInterval: null,
       text: '',
-      id: 0,
-      loaderMessage: {
-        sender: 'bot',
-        text: 'Résumé en cours.'
-      }
+      id: 0
     }
   },
 
@@ -135,6 +130,15 @@ export default {
         message
       })
       this.text = ''
+      try {
+        this.startDotsAnimation()
+        await this.chatStore.send(this.id, message)
+      } catch (error) {
+        this.stopDotsAnimation()
+        this.error = error
+      } finally {
+        this.stopDotsAnimation()
+      }
     }
   }
 }
@@ -232,7 +236,13 @@ export default {
   background-color: #3048a6;
 }
 
-button:disabled {
+.button-container:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.button-container:disabled:hover {
+  background-color: #405BDD;
   cursor: not-allowed;
   opacity: 0.7;
 }

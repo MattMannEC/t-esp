@@ -31,21 +31,10 @@ export const useChatStore = defineStore('chat', {
             }
         },
         async summarize(id, articles) {
-            const loadingMessage = {
-                sender: 'bot',
-                text: 'Résumé en cours.',
-                loading: true
-            }
-            let chat = this.getChatById(id) || {id, messages: [loadingMessage]}
-            if (!chat || chat.length === 0) {
-                this.chats.push(chat)
-            }
-            else {
-                this.updateChat({id, message: loadingMessage})
-            }
-            const text = typeof articles === 'array' ? articles
+            this.loading(id)
+            const text = articles
                 .map((article) => `${article.title}\n${article.text}`)
-                .join('\n') : `${articles.title}\n${articles.text}`
+                .join('\n')
             try {
                 const response = await fetch('http://127.0.0.1:8001/summarize', {
                     method: 'POST',
@@ -55,7 +44,7 @@ export const useChatStore = defineStore('chat', {
                 if (!response.ok) {
                     throw new Error(`Erreur API: ${response.status}`);
                 }
-                const result = await response.json();
+                const result = await response.json()
                 const messageBot = {
                     sender: 'bot',
                     text: result.summary,
@@ -75,5 +64,30 @@ export const useChatStore = defineStore('chat', {
                 })
             }
         },
+        async send (id, data) {
+            this.loading(id)
+            const text = data.text
+            try {
+                const response = await fetch(`http://127.0.0.1:8001/simulate_llm?prompt=${encodeURIComponent(text)}`)
+                const result = response.json
+                console.log(result)
+            } catch (error) {
+                console.log(error)
+            }
+        },
+        loading (id) {
+            const loadingMessage = {
+                sender: 'bot',
+                text: 'Résumé en cours.',
+                loading: true
+            }
+            let chat = this.getChatById(id) || {id, messages: [loadingMessage]}
+            if (!chat || chat.length === 0) {
+                this.chats.push(chat)
+            }
+            else {
+                this.updateChat({id, message: loadingMessage})
+            }
+        }
     },
 });
