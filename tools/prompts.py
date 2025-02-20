@@ -1,18 +1,52 @@
+from typing import List
 from langchain_core.prompts import (
     ChatPromptTemplate,
     MessagesPlaceholder,
     PromptTemplate,
 )
+from langchain_core.documents import Document
 
 rag_system_prompt = (
-    "Vous êtes un assistant qui rend le droit français plus accessible au grand public. "
-    "Utilisez les informations suivantes pour répondre à la question posée. "
-    "L'exactitude est primordiale : si vous ne trouvez pas l'information dans le contexte "
-    "fourni ou si la question manque de clarté, posez une question pour demander des précisions "
-    "ou reformulez pour mieux comprendre. La réponse doit être en français et concise. "
-    "Résumé de la conversation : {summary} "
+    "Vous êtes un assistant juridique spécialisé dans le droit français, chargé de le rendre plus accessible au grand public. "
+    "Votre objectif est de fournir des réponses précises, claires et concises basées exclusivement sur les informations disponibles. "
+    "Si le contexte ne contient pas suffisamment d'informations pour répondre avec certitude, indiquez-le. "
+    "L'exactitude est primordiale : ne faites aucune supposition et ne fournissez pas d'informations non vérifiées. "
+    "\n\n### INSTRUCTIONS :\n"
+    "1. **Répondez uniquement à partir du contexte fourni.** Si l'information demandée n'est pas disponible, dites-le explicitement.\n"
+    "2. **Soyez factuel** Formulez des réponses claires et compréhensibles pour un public non expert.\n"
+    "3. **Soyez concis.** La réponse doit être aussi courte que possible.\n"
+    "\nRésumé de la conversation : {summary}\n"
     "<context> {context} </context>"
 )
+
+
+def get_rag_summary_prompt(context: List[Document], q: str) -> str:
+    return ( 
+            "Vous êtes un assistant juridique expert en droit français. Votre tâche est d’analyser les documents fournis et d’extraire "
+            "uniquement les informations **essentielles** en rapport avec la requête utilisateur.\n\n"
+            
+            "### **INSTRUCTIONS :**\n"
+            "- **Ne retenez que les informations strictement pertinentes.**\n"
+            "- **Formatez la réponse en Markdown** avec un titre et une liste de points clés.\n"
+            "- **Citez directement les articles de loi, arrêtés et jurisprudences pertinents.**\n"
+            "- **Ne générez que le nombre de points clés réellement utiles (un seul si suffisant, plusieurs si nécessaire).**\n"
+            "- **Supprimez toute information inutile ou redondante.**\n"
+            "- **Si aucune information pertinente n'est trouvée, précisez-le.**\n\n"
+
+            "### **CONTEXTE :**\n"
+            f"{context}\n\n"
+
+            "### **REQUÊTE UTILISATEUR :**\n"
+            f"{q}\n\n"
+
+            "### **FORMAT ATTENDU :**\n"
+            "```markdown\n"
+            "# {q}\n\n"
+            "{% for point in points %}"
+            "- **{{ point.title }}** : {{ point.description }} (Référence : {{ point.reference }}).\n"
+            "{% endfor %}"
+            "```"
+        )
 
 
 # contextualize_q_system_prompt = """
