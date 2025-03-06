@@ -4,27 +4,47 @@ from tools.logger import logger
 from flask import Flask
 from http import HTTPStatus
 
-from flask_sse import sse
-from flask_cors import CORS
 from langchain_core.messages import AIMessageChunk
 from langchain_core.globals import set_debug
 from langchain_core.runnables import RunnableConfig
-from classes.config import app_config
+
+from sse.sse import format_sse
+from sse.announcer import MessageAnnouncer
 
 set_debug(False)
 
 # Run app
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all origins
-app.config["REDIS_URL"] = app_config.REDIS_URL
-logger.info("Register blueprint")
-app.register_blueprint(sse, url_prefix="/stream")
 
+announcer = MessageAnnouncer()
 logger.info("graph compiled")
 
 
+@app.after_request
+def add_headers(response):
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Headers", "*")
+    response.headers.add("Access-Control-Allow-Methods", "*")
+    return response
+
+
+@app.route("/stream", methods=["GET"])
+def listen():
+    user_id = request.args.get("user_id")
+    if not user_id:
+        return Response("Missing 'user_id' parameter", HTTPStatus.BAD_REQUEST)
+
+    def stream(client_addr):
+        messages = announcer.listen(client_addr)  # returns a queue.Queue
+        while True:
+            msg = messages.get()  # blocks until a new message arrives
+            yield msg
+
+    return Response(stream(user_id), mimetype="text/event-stream")
+
+
 @app.route("/invoke")
-async def invoke() -> Response:
+def invoke() -> Response:
     prompt = request.args.get("prompt")
     user_id = request.args.get("user_id")
     if not prompt:
@@ -33,20 +53,28 @@ async def invoke() -> Response:
     if not user_id:
         return Response("Missing 'user_id' parameter", HTTPStatus.BAD_REQUEST)
 
-    # docs = conditions_collection.similarity_search(prompt)
-    config: RunnableConfig = {"configurable": {"thread_id": user_id}}
     try:
-        async for event in graph.astream_events(
-            {"input": prompt},
-            config=config,
-            version="v1",
-            include_names=["interface_destined"]
-        ):
-            if isinstance(event.get("data").get("chunk"), AIMessageChunk):
-                sse.publish({"value": event.get("data").get("chunk").content})
+        invoke_graph(prompt, user_id)
 
     except Exception as e:
         logger.error(e)
         return Response("", HTTPStatus.BAD_REQUEST)
 
     return Response("", HTTPStatus.OK)
+
+
+def invoke_graph(prompt: str, user_id: str):
+    config: RunnableConfig = {
+        "configurable": {"thread_id": user_id},
+    }
+
+    for s, m in graph.stream(
+        {"input": prompt},
+        config=config,
+        stream_mode="messages",
+    ):
+        if isinstance(s, AIMessageChunk) and m.get("stream") is True:
+            announcer.announce(
+                msg=format_sse(data=s.content),
+                client_addr=user_id,
+            )
