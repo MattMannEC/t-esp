@@ -7,7 +7,7 @@ from classes.config import app_config
 
 model = HuggingFaceEmbeddings(
     model_name="dangvantuan/french-embedding-LongContext",
-    model_kwargs={"trust_remote_code": True},
+    model_kwargs={"trust_remote_code": True, 'device': 'cuda'},
 )
 from tools.logger import logger
 

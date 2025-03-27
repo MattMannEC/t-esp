@@ -7,16 +7,9 @@ services:
     environment:
       - IS_PERSISTENT=TRUE
       - PERSIST_DIRECTORY=/chroma/chroma
-      - ANONYMIZED_TELEMETRY=${ANONYMIZED_TELEMETRY:-FALSE}    
+      - ANONYMIZED_TELEMETRY=FALSE
     ports:
       - 8000:8000
-
-  redis:
-    image: redis:latest
-    container_name: redis
-    ports:
-      - "6379:6379"
-
   api:
     build:
       context: .
@@ -24,23 +17,37 @@ services:
     container_name: api
     depends_on:
       - chromadb
-      - redis
     environment:
       - OLLAMA_SERVER_URL="http://ollama:11434"
     ports:
       - 8001:8001
     volumes:
       - .:/app
-      - huggingface:/root/.cache/huggingface
-    # entrypoint: ["sleep", "10000"]
+      - huggingface:/root/.cache/huggingface    
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
   ollama:
     image: ollama/ollama
     container_name: ollama
+    environment:
+      - OLLAMA_NUM_PARALLEL=3
     volumes:
       - ollama:/root/.ollama
     ports:
       - 11434:11434
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
 volumes:
   chromadb:

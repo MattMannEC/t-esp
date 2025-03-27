@@ -1,15 +1,11 @@
 from tools.logger import logger
 from classes.data_types import State
 from classes.config import app_config
-
+from tools.chat_models import llm
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 # Configure logger
-
-summary_model = ChatOllama(
-    model="mistral:latest", verbose=True, base_url=app_config.LLM_HOST_URL
-)
 
 system_prompt = (
     "Résumer progressivement les lignes de conversation fournies, en ajoutant au résumé précédent pour retourner un nouveau résumé.\n\n"
@@ -36,7 +32,7 @@ prompt: ChatPromptTemplate = ChatPromptTemplate.from_messages(
 
 def invoke_summary_model(state: State):
     logger.info(invoke_summary_model)
-    chain = prompt | summary_model
+    chain = prompt | llm
     state["summary"] = state.get("summary", "")
 
     if len(state["messages"]) < 3:

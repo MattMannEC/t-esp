@@ -43,13 +43,14 @@ export default {
   },
   mounted() {
     this.userId = Math.floor(Math.random() * 1000000);
-    this.eventSource = new EventSource('http://localhost:8001/stream');
+    this.eventSource = new EventSource(`http://localhost:8001/stream?user_id=${this.userId}`);
     this.eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
+      console.log(data)
       if (this.messages.length === 0 || this.messages[this.messages.length - 1].sender !== 'bot') {
-        this.messages.push({ sender: 'bot', text: data.value });
+        this.messages.push({ sender: 'bot', text: data });
       } else {
-        this.messages[this.messages.length - 1].text += data.value;
+        this.messages[this.messages.length - 1].text += data;
       }
     };
   },
@@ -58,7 +59,7 @@ export default {
       if (this.prompt.trim() !== '') {
         this.messages.push({ sender: 'user', text: this.prompt });
         fetch(`http://localhost:8001/invoke?prompt=${encodeURIComponent(this.prompt)}&user_id=${this.userId}`)
-          .then(response => response.json())
+          // .then(response => response.json())
           .then(data => {
             // Handle the response data if needed
             console.log(data);
