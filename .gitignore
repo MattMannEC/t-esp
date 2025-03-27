@@ -8,3 +8,5 @@ tools/*documents
 .idea
 chroma.log
 chroma_data
+env
+venv
