@@ -5,9 +5,14 @@ from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from classes.config import app_config
 
+import torch
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+
 model = HuggingFaceEmbeddings(
     model_name="dangvantuan/french-embedding-LongContext",
-    model_kwargs={"trust_remote_code": True, 'device': 'cuda'},
+    model_kwargs={"trust_remote_code": True, 'device': device},
 )
 from tools.logger import logger
 
