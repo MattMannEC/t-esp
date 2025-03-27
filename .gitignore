@@ -4,3 +4,7 @@
 node_modules
 .vscode
 tools/*documents
+.env
+.idea
+chroma.log
+chroma_data
